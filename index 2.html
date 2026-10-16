@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IVA CARS RENTAL</title>
+<style>
+:root{font-family:system-ui,-apple-system,Arial,sans-serif;color:#17252b;background:#eef1f2}
+*{box-sizing:border-box}body{margin:0}.app{max-width:520px;margin:auto;min-height:100vh;background:#fff}
+header{background:#17252b;color:white;padding:22px 20px}header small{color:#b8c9c9}h1{font-size:21px;margin:4px 0}main{padding:18px}
+.sub{color:#65757c;font-size:13px}.card{border:1px solid #e2e8e9;border-radius:18px;margin:14px 0;overflow:hidden}
+.hero{height:130px;background:linear-gradient(120deg,#273c43,#587178);display:flex;align-items:center;justify-content:center;font-size:64px;color:white}
+.details{padding:15px}.line{display:flex;justify-content:space-between;align-items:center;gap:10px}.price{font-size:20px;font-weight:800}
+button{background:#198768;color:white;border:0;border-radius:12px;padding:13px 17px;font-weight:700;cursor:pointer}
+button.secondary{background:#e9eeef;color:#17252b}button:disabled{opacity:.5}
+input,select{width:100%;border:1px solid #d6dfe2;border-radius:10px;padding:12px;font:inherit;background:white}
+label{display:block;margin:14px 0 5px;font-size:13px;font-weight:700}
+.panel{background:#f2f5f5;border-radius:14px;padding:14px;margin:16px 0}
+.hidden{display:none}.error{color:#b42318;font-size:13px}.success{color:#147b5a}
+footer{padding:18px;text-align:center;color:#819097;font-size:12px}
+</style></head><body><div class="app">
+<header><small>СУЧАВА • РУМУНІЯ</small><h1>IVA CARS<br>RENTAL</h1><small>Оренда автомобілів від €25/доба</small></header>
+<main>
+<section id="catalog"><h2>Оберіть автомобіль</h2><p class="sub">Каталог для тестування. Ціни та характеристики уточнюються.</p><div id="cars"></div></section>
+<section id="booking" class="hidden">
+<button class="secondary" onclick="show('catalog')">← До каталогу</button><h2 id="carTitle"></h2>
+<div class="panel"><div id="carRate"></div></div>
+<label for="start">Дата отримання</label><input id="start" type="date">
+<label for="end">Дата повернення</label><input id="end" type="date">
+<label for="place">Місце отримання</label><select id="place"><option>Сучава, центр</option><option>Аеропорт Сучава</option><option>Інше місце (за погодженням)</option></select>
+<label for="fullName">Ім'я та прізвище</label><input id="fullName" placeholder="Іван Петренко" autocomplete="name">
+<label for="phone">Телефон</label><input id="phone" type="tel" placeholder="+40..." autocomplete="tel">
+<div class="panel" id="summary">Оберіть дати для розрахунку.</div>
+<p class="error" id="error"></p>
+<button onclick="review()">Переглянути заявку →</button>
+</section>
+<section id="review" class="hidden"><button class="secondary" onclick="show('booking')">← Редагувати</button>
+<h2>Перевірте заявку</h2><div class="panel" id="reviewText"></div>
+<p class="sub">Це демоверсія. Заявка не відправляється компанії, бронювання не створюється, оплата не списується.</p>
+<button onclick="copyBooking()">Скопіювати заявку</button><p id="copyStatus" class="success"></p></section>
+</main><footer>IVA CARS RENTAL · Демонстраційний прототип</footer></div>
+<script>
+const cars=[
+{id:"prius20",name:"Toyota Prius 20",price:25,emoji:"🚙",detail:"Гібрид • автомат"},
+{id:"prius30",name:"Toyota Prius 30",price:30,emoji:"🚘",detail:"Гібрид • автомат"},
+{id:"sportage",name:"Kia Sportage",price:40,emoji:"🚙",detail:"Кросовер"},
+{id:"megane4",name:"Renault Megane IV",price:35,emoji:"🚗",detail:"Компактний автомобіль"}
+];
+const deposit=100; // Повернений депозит для всіх автомобілів
+let selected=null,bookingText="";
+const $=id=>document.getElementById(id);
+function show(id){["catalog","booking","review"].forEach(x=>$(x).classList.toggle("hidden",x!==id));scrollTo(0,0)}
+$("cars").innerHTML=cars.map(c=>`<article class="card"><div class="hero" aria-hidden="true">${c.emoji}</div><div class="details"><div class="line"><strong>${c.name}</strong><span class="price">€${c.price}/доба</span></div><p class="sub">${c.detail}</p><button onclick="choose('${c.id}')">Забронювати →</button></div></article>`).join("");
+function choose(id){selected=cars.find(c=>c.id===id);$("carTitle").textContent=selected.name;$("carRate").textContent=`€${selected.price} за добу · Орієнтовна ціна`;show("booking");calculate()}
+const today=new Date();const localDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+$("start").min=localDate(today);$("end").min=localDate(today);
+$("start").value=localDate(today);let tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);$("end").value=localDate(tomorrow);
+function getDays(){let a=new Date($("start").value+"T12:00:00"),b=new Date($("end").value+"T12:00:00");return Math.round((b-a)/86400000)}
+function calculate(){if(!selected)return;let n=getDays();$("summary").innerHTML=n>0?`Оренда: ${n} діб × €${selected.price} = <b>€${n*selected.price}</b><br>Повернений депозит: <b>€${deposit}</b><br><strong>Разом при отриманні: €${n*selected.price+deposit}</strong><br><small>Депозит повертається за умовами договору. Додаткові послуги не враховані.</small>`:"Дата повернення має бути пізніше дати отримання."}
+["start","end"].forEach(id=>$(id).addEventListener("change",calculate));
+function review(){
+$("error").textContent="";let n=getDays();
+if(!Number.isFinite(n)||n<1){$("error").textContent="Перевірте дати: оренда має тривати щонайменше одну добу.";return}
+if($("start").value<localDate(new Date())){$("error").textContent="Дата отримання не може бути в минулому.";return}
+if(!$("fullName").value.trim()||!$("phone").value.trim()){$("error").textContent="Вкажіть ім’я та телефон.";return}
+bookingText=`IVA CARS RENTAL\nАвтомобіль: ${selected.name}\nОтримання: ${$("start").value}\nПовернення: ${$("end").value}\nМісце: ${$("place").value}\nКлієнт: ${$("fullName").value}\nТелефон: ${$("phone").value}\nТривалість: ${n} діб\nОренда: €${n*selected.price}\nПовернений депозит: €${deposit}\nРазом при отриманні: €${n*selected.price+deposit}`;
+$("reviewText").innerText=bookingText;show("review")}
+async function copyBooking(){try{await navigator.clipboard.writeText(bookingText);$("copyStatus").textContent="Заявку скопійовано."}catch(e){$("copyStatus").textContent="Не вдалося скопіювати автоматично."}}
+</script></body></html>
